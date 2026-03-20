@@ -7,7 +7,7 @@ import Navbar from "./screen/navbar";
 
 export default function Ubuntu() {
   const [screen_locked, setScreen_locked] = useState(true);
-  const [bg_image_name, setBg_image_name] = useState("wall-2");
+  const [bg_image_name, setBg_image_name] = useState("wall-8"); // default wallpaper: default.jpg
   const [booting_screen, setBooting_screen] = useState(false);
   const [shutDownScreen, setShutDownScreen] = useState(false);
 
