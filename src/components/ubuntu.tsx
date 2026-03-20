@@ -51,13 +51,7 @@ export default function Ubuntu() {
     const shut_down = localStorage.getItem("shut-down");
     if (shut_down !== null && shut_down !== undefined && shut_down === "true")
       shutDown();
-    else {
-      // Get previous lock screen state
-      const screen_locked = localStorage.getItem("screen-locked");
-      if (screen_locked !== null && screen_locked !== undefined) {
-        setScreen_locked(screen_locked === "true" ? true : false);
-      }
-    }
+    // Always start on the lock screen on each load; unlock only after user clicks (not persisted).
   }, [setTimeOutBootScreen, shutDown]);
 
   const lockScreen = useCallback(() => {
@@ -78,11 +72,9 @@ export default function Ubuntu() {
   const unLockScreen = useCallback(() => {
     // ReactGA.pageview("/desktop");
 
-    window.removeEventListener("click", unLockScreen);
     window.removeEventListener("keypress", unLockScreen);
 
     setScreen_locked(false);
-    localStorage.setItem("screen-locked", "false");
   }, []);
 
   const changeBackgroundImage = useCallback((img_name: string) => {

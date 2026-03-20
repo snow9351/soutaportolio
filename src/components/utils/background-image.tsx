@@ -2,7 +2,7 @@ import React from "react";
 
 export default function BackgroundImage(props: { img: string }) {
   const bg_images = {
-    "wall-8": "/images/wallpapers/wall-8.webp",
+    "wall-8": "/images/wallpapers/default.jpg",
     "wall-1": "/images/wallpapers/wall-1.webp",
     "wall-2": "/images/wallpapers/wall-2.webp",
     "wall-3": "/images/wallpapers/wall-3.webp",

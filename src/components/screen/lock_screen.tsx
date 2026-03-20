@@ -15,7 +15,7 @@ const wallpapers: Record<string, string> = {
   "wall-5": "/images/wallpapers/wall-5.webp",
   "wall-6": "/images/wallpapers/wall-6.webp",
   "wall-7": "/images/wallpapers/wall-7.webp",
-  "wall-8": "/images/wallpapers/wall-8.webp",
+  "wall-8": "/images/wallpapers/default.jpg",
   "wall-9": "/images/wallpapers/wall-9.webp",
   "wall-10": "/images/wallpapers/wall-10.webp",
   "wall-11": "/images/wallpapers/wall-11.webp",
@@ -23,14 +23,10 @@ const wallpapers: Record<string, string> = {
 
 export default function LockScreen({ isLocked, bgImgName, unLockScreen }: LockScreenProps) {
   useEffect(() => {
-    if (isLocked) {
-      window.addEventListener("click", unLockScreen);
-      window.addEventListener("keypress", unLockScreen);
-    }
+    if (!isLocked) return;
 
-    // Cleanup event listeners when component unmounts or isLocked changes
+    window.addEventListener("keypress", unLockScreen);
     return () => {
-      window.removeEventListener("click", unLockScreen);
       window.removeEventListener("keypress", unLockScreen);
     };
   }, [isLocked, unLockScreen]);
@@ -38,12 +34,14 @@ export default function LockScreen({ isLocked, bgImgName, unLockScreen }: LockSc
   return (
     <div
       id="ubuntu-lock-screen"
-      style={{ zIndex: "100" }}
+      style={{ zIndex: 110 }}
+      role="presentation"
+      onClick={isLocked ? unLockScreen : undefined}
       className={
         (isLocked
           ? " visible translate-y-0 "
-          : " invisible -translate-y-full ") +
-        " absolute outline-none bg-black/90 transform duration-500 select-none top-0 right-0 overflow-hidden m-0 p-0 h-screen w-screen"
+          : " invisible -translate-y-full pointer-events-none ") +
+        " absolute outline-none bg-black/90 transform duration-500 select-none top-0 right-0 overflow-hidden m-0 p-0 h-screen w-screen cursor-pointer"
       }
     >
       <div
@@ -55,7 +53,7 @@ export default function LockScreen({ isLocked, bgImgName, unLockScreen }: LockSc
         }}
         className="absolute top-0 left-0 w-full h-full transform z-20 blur-md "
       ></div>
-      <div className="w-full h-full z-50 overflow-hidden relative flex flex-col justify-center items-center text-white">
+      <div className="w-full h-full z-50 overflow-hidden relative flex flex-col justify-center items-center text-white pointer-events-none">
         <div className=" text-7xl">
           <Clock onlyTime={true} />
         </div>
