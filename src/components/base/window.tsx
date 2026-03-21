@@ -470,14 +470,14 @@ const Window = (props: PropsType) => {
       const r = windowRef.current;
       if (!r) return;
       setWindowPosition();
-      const maxY = STATUS_STRIP_HEIGHT_PX - 2;
-      r.style.transform = `translate(-1pt, ${maxY}px)`;
-      setDragPosition({ x: -1, y: maxY });
+      // Desktop parent already reserves STATUS_STRIP_HEIGHT_PX padding — fill content area (no double offset).
+      r.style.transform = "translate(0px, 0px)";
+      setDragPosition({ x: 0, y: 0 });
       setState((prev) => ({
         ...prev,
         maximized: true,
-        height: 96.3,
-        width: 100.2,
+        height: 100,
+        width: 100,
       }))
       props.hideSideBar(id ?? "", true);
     }
@@ -531,7 +531,7 @@ const Window = (props: PropsType) => {
           ${state.closed ? " closed-window " : ""} 
           ${state.maximized ? " duration-300 rounded-none" : " rounded-lg rounded-b-none"} 
           ${props.minimized ? " pointer-events-none opacity-0 invisible duration-200" : ""} 
-          ${props.isFocused ? " z-30 " : " z-20 notFocused"} 
+          ${props.isFocused ? " z-[35] " : " z-[25] notFocused"} 
           opened-window overflow-hidden min-w-1/4 min-h-1/4 main-window absolute window-shadow border-black/40 border border-t-0 flex flex-col
         `}
         id={id ?? ""}

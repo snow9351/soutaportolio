@@ -687,7 +687,7 @@ export default function Desktop({ changeBackgroundImage, bg_image_name }: Deskto
       {/* Desktop Clock */}
       {!clockDisabled ? (
         <div
-          className="absolute z-30 select-none pointer-events-auto"
+          className="absolute z-[12] select-none pointer-events-auto"
           style={{ left: clockPosition.x, top: clockPosition.y }}
           onMouseDown={startClockDrag}
         >

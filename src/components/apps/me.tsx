@@ -15,9 +15,6 @@ import {
 } from "../ui/sidebar"
 import { about } from "@/config/aboutme"
 import Image from "next/image"
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
-import { Kbd } from "../ui/kbd"
-import { STATUS_STRIP_HEIGHT_PX } from "@/config/layout"
 import About from "./about/About"
 import Education from "./about/Education"
 import History from "./about/History"
@@ -58,13 +55,13 @@ const AboutMe = () => {
 
   return (
     <SidebarProvider
-      className="w-full h-full flex bg-ub-cool-grey text-white select-none relative min-h-none"
+      className="flex h-full min-h-0 w-full min-w-0 flex-row bg-ub-cool-grey text-white select-none relative"
       style={{ "--sidebar-width": "15.5rem" } as React.CSSProperties}
     >
+      {/* collapsible="none" keeps the nav inside the window (no viewport-fixed sidebar) */}
       <Sidebar
-        className="text-base overflow-y-auto windowMainScreen border-r border-black"
-        style={{ top: STATUS_STRIP_HEIGHT_PX }}
-        collapsible="icon"
+        className="h-full min-h-0 shrink-0 border-r border-black bg-ub-cool-grey text-base windowMainScreen overflow-y-auto"
+        collapsible="none"
       >
         <SidebarContent className="bg-ub-cool-grey">
           <SidebarGroup className="text-white">
@@ -96,15 +93,7 @@ const AboutMe = () => {
           </SidebarGroup>
         </SidebarContent>
       </Sidebar>
-      <div className="flex-1 max-h-full overflow-y-auto custom-scrollbar">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <SidebarTrigger />
-          </TooltipTrigger>
-          <TooltipContent side="right" >
-            <Kbd>Ctrl</Kbd> + <Kbd>B</Kbd>
-          </TooltipContent>
-        </Tooltip>
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto custom-scrollbar">
         {currentScreen}
       </div>
       
