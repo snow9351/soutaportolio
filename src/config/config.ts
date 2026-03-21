@@ -24,6 +24,9 @@ const apps = [
     disabled: false,
     favourite: false,
     desktop_shortcut: true,
+    /** Shorter default window than other apps (percent of viewport). */
+    windowWidthPct: 40,
+    windowHeightPct: 66,
     screen: Gedit,
   },
   {

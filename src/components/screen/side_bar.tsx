@@ -1,3 +1,4 @@
+import { STATUS_STRIP_HEIGHT_PX } from "@/config/layout";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import SideBarApp from "../base/side_bar_app";
@@ -83,8 +84,9 @@ export default function SideBar(props: SideBarProps) {
         onMouseLeave={hideSideBar}
         className={
           (props.hide ? " translate-x-full " : "") +
-          " absolute transform duration-300 select-none z-40 right-0 top-0 h-full pt-8 px-2 w-auto flex flex-col justify-start items-center border-black/60 bg-black/50"
+          " absolute transform duration-300 select-none z-40 right-0 top-0 h-full px-2 w-auto flex flex-col justify-start items-center border-black/60 bg-black/50"
         }
+        style={{ paddingTop: STATUS_STRIP_HEIGHT_PX }}
       >
         {Object.keys(props.closed_windows).length !== 0
           ? renderApps(props, openAppFromSideBar)

@@ -17,6 +17,7 @@ import { about } from "@/config/aboutme"
 import Image from "next/image"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import { Kbd } from "../ui/kbd"
+import { STATUS_STRIP_HEIGHT_PX } from "@/config/layout"
 import About from "./about/About"
 import Education from "./about/Education"
 import History from "./about/History"
@@ -58,22 +59,34 @@ const AboutMe = () => {
   return (
     <SidebarProvider
       className="w-full h-full flex bg-ub-cool-grey text-white select-none relative min-h-none"
+      style={{ "--sidebar-width": "15.5rem" } as React.CSSProperties}
     >
       <Sidebar
-        className="text-sm overflow-y-auto windowMainScreen border-r border-black top-[34px]"
+        className="text-base overflow-y-auto windowMainScreen border-r border-black"
+        style={{ top: STATUS_STRIP_HEIGHT_PX }}
         collapsible="icon"
       >
         <SidebarContent className="bg-ub-cool-grey">
           <SidebarGroup className="text-white">
-            <SidebarGroupLabel className="text-gray-300">Souta Hoshino</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
+            <SidebarGroupLabel className="!h-auto py-2 text-gray-300 !text-base font-semibold tracking-tight">
+              Souta Hoshino
+            </SidebarGroupLabel>
+            <SidebarGroupContent className="text-base">
+              <SidebarMenu className="gap-4">
                 {about.map((item) => (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
+                      size="lg"
+                      className="!h-auto min-h-11 py-2.5 !text-base gap-4 [&_img]:size-6 [&_img]:min-h-6 [&_img]:min-w-6 [&_img]:shrink-0"
                       onClick={() => changeScreen(item.id)}
                     >
-                      <Image src={item.icon} alt={item.title} width={16} height={16} />
+                      <Image
+                        src={item.icon}
+                        alt={item.title}
+                        width={24}
+                        height={24}
+                        className="size-6 object-contain"
+                      />
                       <span>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

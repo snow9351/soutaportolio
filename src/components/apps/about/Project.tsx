@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import { STATUS_STRIP_HEIGHT_PX } from "@/config/layout";
 import { projectList } from "@/config/projectList";
 import type { Project as ProjectType } from "@/types/project";
 import { useEffect, useState, useCallback, useMemo } from "react";
@@ -460,7 +461,8 @@ const Projects = () => {
       {/* Enhanced Lightbox Modal */}
       {lightbox.open && lightbox.projectIndex !== null && (
         <div
-          className="fixed inset-0 top-[34px] z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200"
+          className="fixed inset-x-0 bottom-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200"
+          style={{ top: STATUS_STRIP_HEIGHT_PX }}
           onClick={closeLightbox}
         >
           <button

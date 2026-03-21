@@ -1,8 +1,30 @@
 /* eslint-disable @next/next/no-img-element */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { STATUS_STRIP_HEIGHT_PX } from "@/config/layout";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Draggable from "react-draggable";
 import Settings from "../apps/settings";
 import { displayTerminal } from "../apps/terminal";
+
+/** Center a window in the viewport below the status strip (matches open size before user resize). */
+function estimateCenteredPosition(widthPct: number, heightPct: number) {
+  if (typeof window === "undefined") {
+    return { x: 0, y: STATUS_STRIP_HEIGHT_PX };
+  }
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const strip = STATUS_STRIP_HEIGHT_PX;
+  const w = (vw * widthPct) / 100;
+  const h = (vh * heightPct) / 100;
+  return {
+    x: Math.max(0, Math.round((vw - w) / 2)),
+    y: Math.max(strip, Math.round(strip + (vh - strip - h) / 2)),
+  };
+}
+
+function parseCssPx(val: string) {
+  const n = parseFloat(String(val).replace(/px/gi, "").trim());
+  return Number.isFinite(n) ? n : 0;
+}
 
 type StateType = {
   cursorType: string;
@@ -31,6 +53,9 @@ type PropsType = {
   minimized: boolean;
   changeBackgroundImage: (imageName: string) => void;
   bg_image_name: string;
+  /** Optional default size as % of viewport (desktop: width×height; mobile: swapped). */
+  windowWidthPct?: number;
+  windowHeightPct?: number;
 }
 
 type WindowBorderProps = {
@@ -202,27 +227,54 @@ const WindowMainScreen = (props: WindowMainScreenProps) => {
   )
 }
 
+function getViewportWindowPercents(
+  initialWidthPct?: number,
+  initialHeightPct?: number
+) {
+  if (typeof window === "undefined") {
+    return {
+      w: initialWidthPct ?? 60,
+      h: initialHeightPct ?? 85,
+    };
+  }
+  const mobile = window.innerWidth < 640;
+  const w = initialWidthPct ?? (mobile ? 85 : 60);
+  const h = initialHeightPct ?? (mobile ? 60 : 85);
+  return { w, h };
+}
+
 const Window = (props: PropsType) => {
   const [id, setId] = useState<string | null>(null);
-  const [startX, setStartX] = useState<number>(60)
-  const [startY, setStartY] = useState<number>(10)
-  const [state, setState] = useState<StateType>({
-    cursorType: "cursor-default",
-    width: 60,
-    height: 85,
-    closed: false,
-    maximized: false,
-    parentSize: {
-      height: 100,
-      width: 100,
-    }
+  const [dragPosition, setDragPosition] = useState(() => {
+    const { w, h } = getViewportWindowPercents(
+      props.windowWidthPct,
+      props.windowHeightPct
+    );
+    return estimateCenteredPosition(w, h);
+  });
+  const [state, setState] = useState<StateType>(() => {
+    const { w, h } = getViewportWindowPercents(
+      props.windowWidthPct,
+      props.windowHeightPct
+    );
+    return {
+      cursorType: "cursor-default",
+      width: w,
+      height: h,
+      closed: false,
+      maximized: false,
+      parentSize: {
+        height: 100,
+        width: 100,
+      },
+    };
   })
   const windowRef = useRef<HTMLDivElement>(null);
 
   const resizeBoundries = useCallback(() => {
     setState((prev) => {
       const nextParentSize = {
-        height: window.innerHeight - window.innerHeight * (prev.height / 100.0) - 28,
+        height: window.innerHeight - window.innerHeight * (prev.height / 100.0) - STATUS_STRIP_HEIGHT_PX,
         width: window.innerWidth - window.innerWidth * (prev.width / 100.0),
       };
       if (
@@ -236,20 +288,16 @@ const Window = (props: PropsType) => {
   }, [])
 
   const setDefaultWindowDimension = useCallback(() => {
-    if (window.innerWidth < 640) {
-      setState((prev) => ({
-        ...prev,
-        height: 60,
-        width: 85,
-      }))
-    } else {
-      setState((prev) => ({
-        ...prev,
-        height: 85,
-        width: 60,
-      }))
-    }
-  }, [])
+    const { w, h } = getViewportWindowPercents(
+      props.windowWidthPct,
+      props.windowHeightPct
+    );
+    setState((prev) => ({
+      ...prev,
+      width: w,
+      height: h,
+    }));
+  }, [props.windowHeightPct, props.windowWidthPct])
 
   // Update parentSize whenever width/height change
   useEffect(() => {
@@ -264,6 +312,58 @@ const Window = (props: PropsType) => {
     window.addEventListener("resize", onResize)
     return () => window.removeEventListener("resize", onResize)
   }, [props.id, setDefaultWindowDimension, resizeBoundries])
+
+  const wasMaximizedRef = useRef(false);
+
+  /** Center window when it opens; skip when restoring from maximize so position is preserved. */
+  useLayoutEffect(() => {
+    if (state.maximized) {
+      wasMaximizedRef.current = true;
+      return;
+    }
+    if (state.closed || props.minimized) return;
+
+    if (wasMaximizedRef.current) {
+      wasMaximizedRef.current = false;
+      return;
+    }
+
+    const applyCenterFromDom = () => {
+      const el = windowRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      if (r.width < 32 || r.height < 32) return;
+      const x = Math.round((window.innerWidth - r.width) / 2);
+      const y = Math.round(
+        STATUS_STRIP_HEIGHT_PX +
+          (window.innerHeight - STATUS_STRIP_HEIGHT_PX - r.height) / 2
+      );
+      setDragPosition({ x, y });
+    };
+
+    const { w, h } = getViewportWindowPercents(
+      props.windowWidthPct,
+      props.windowHeightPct
+    );
+    setDragPosition(estimateCenteredPosition(w, h));
+
+    const timeouts = [0, 32, 100].map((ms) =>
+      window.setTimeout(applyCenterFromDom, ms)
+    );
+    const raf = requestAnimationFrame(applyCenterFromDom);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      timeouts.forEach(clearTimeout);
+    };
+  }, [
+    props.id,
+    props.minimized,
+    props.windowHeightPct,
+    props.windowWidthPct,
+    state.closed,
+    state.maximized,
+  ])
 
   const focusWindow = useCallback(() => {
     props.focus(id ?? "");
@@ -287,6 +387,10 @@ const Window = (props: PropsType) => {
     const posx = r.style.getPropertyValue("--window-transform-x");
     const posy = r.style.getPropertyValue("--window-transform-y");
     r.style.transform = `translate(${posx}, ${posy})`;
+    setDragPosition({
+      x: parseCssPx(posx),
+      y: parseCssPx(posy),
+    });
     setTimeout(() => {
       setState((prev) => ({
         ...prev,
@@ -339,7 +443,7 @@ const Window = (props: PropsType) => {
     );
     r.style.setProperty(
       "--window-transform-y",
-      (Number(rect.y.toFixed(1)) - 32).toString() + "px"
+      (Number(rect.y.toFixed(1)) - STATUS_STRIP_HEIGHT_PX).toString() + "px"
     );
   }, [])
 
@@ -366,7 +470,9 @@ const Window = (props: PropsType) => {
       const r = windowRef.current;
       if (!r) return;
       setWindowPosition();
-      r.style.transform = `translate(-1pt,-2pt)`;
+      const maxY = STATUS_STRIP_HEIGHT_PX - 2;
+      r.style.transform = `translate(-1pt, ${maxY}px)`;
+      setDragPosition({ x: -1, y: maxY });
       setState((prev) => ({
         ...prev,
         maximized: true,
@@ -397,11 +503,15 @@ const Window = (props: PropsType) => {
       handle=".bg-ub-window-title"
       grid={[1, 1]}
       scale={1}
+      disabled={state.maximized}
       onStart={() => changeCursorToMove()}
       onStop={() => changeCursorToDefault()}
-      onDrag={() => checkOverLap()}
+      onDrag={(_, data) => {
+        setDragPosition({ x: data.x, y: data.y });
+        checkOverLap();
+      }}
       allowAnyClick={false} // Drag by only left-button
-      defaultPosition={{x: startX, y: startY}}
+      position={dragPosition}
       bounds={{
         left:0,
         top:0,
@@ -420,7 +530,7 @@ const Window = (props: PropsType) => {
           ${state.cursorType} 
           ${state.closed ? " closed-window " : ""} 
           ${state.maximized ? " duration-300 rounded-none" : " rounded-lg rounded-b-none"} 
-          ${props.minimized ? " opacity-0 invisible duration-200" : ""} 
+          ${props.minimized ? " pointer-events-none opacity-0 invisible duration-200" : ""} 
           ${props.isFocused ? " z-30 " : " z-20 notFocused"} 
           opened-window overflow-hidden min-w-1/4 min-h-1/4 main-window absolute window-shadow border-black/40 border border-t-0 flex flex-col
         `}

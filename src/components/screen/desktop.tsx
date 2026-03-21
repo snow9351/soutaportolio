@@ -1,5 +1,6 @@
 import apps from "@/config/config";
-import React, { useState, useEffect, useRef } from "react";
+import { STATUS_STRIP_HEIGHT_PX } from "@/config/layout";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import UbuntuApp from "../base/ubuntu_app";
 import Window from "../base/window";
 import BackgroundImage from "../utils/background-image";
@@ -30,6 +31,8 @@ export default function Desktop({ changeBackgroundImage, bg_image_name }: Deskto
     favourite: boolean;
     desktop_shortcut: boolean;
     screen: (addFolder?: (name: string) => void, openApp?: (id: string) => void) => React.ReactNode;
+    windowWidthPct?: number;
+    windowHeightPct?: number;
   };
 
   // State variables
@@ -417,6 +420,29 @@ export default function Desktop({ changeBackgroundImage, bg_image_name }: Deskto
     setFavourite_apps(newFavourite_apps);
   };
 
+  /** Click empty desktop (not on a window) → close the focused app window. */
+  const handleDesktopBackdropClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if ((e.target as HTMLElement).closest(".main-window")) return;
+      if (showNameBar || allAppsView) return;
+
+      const focusedId = Object.keys(focused_windows).find(
+        (id) =>
+          focused_windows[id] &&
+          closed_windows[id] === false &&
+          !minimized_windows[id]
+      );
+      if (focusedId) closeApp(focusedId);
+    },
+    [
+      allAppsView,
+      closed_windows,
+      focused_windows,
+      minimized_windows,
+      showNameBar,
+    ]
+  );
+
   const addNewFolder = () => {
     setShowNameBar(true);
   };
@@ -490,6 +516,8 @@ export default function Desktop({ changeBackgroundImage, bg_image_name }: Deskto
           minimized: minimized_windows[app.id],
           changeBackgroundImage: changeBackgroundImage,
           bg_image_name: bg_image_name,
+          windowWidthPct: app.windowWidthPct,
+          windowHeightPct: app.windowHeightPct,
         };
         windowsJsx.push(<Window key={index} {...props} />);
       }
@@ -640,13 +668,15 @@ export default function Desktop({ changeBackgroundImage, bg_image_name }: Deskto
   return (
     <div
       className={
-        " h-full w-full flex flex-col items-end justify-start content-end flex-wrap-reverse pt-8 bg-transparent relative overflow-hidden overscroll-none window-parent"
+        " h-full w-full flex flex-col items-end justify-start content-end flex-wrap-reverse bg-transparent relative overflow-hidden overscroll-none window-parent"
       }
+      style={{ paddingTop: STATUS_STRIP_HEIGHT_PX }}
     >
       {/* Window Area */}
       <div
         className="absolute h-full w-full bg-transparent"
         data-context="desktop-area"
+        onClick={handleDesktopBackdropClick}
       >
         {renderWindows()}
       </div>

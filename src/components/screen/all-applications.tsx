@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 
+import { STATUS_STRIP_HEIGHT_PX } from "@/config/layout";
 import React, { useState, useEffect, useCallback } from "react";
 import UbuntuApp from "../base/ubuntu_app";
 
@@ -75,8 +76,9 @@ export default function AllApplications({ apps, openApp }: AllApplicationsProps)
   return (
     <div
       className={
-        "absolute h-full top-7 w-full z-20 pl-12 justify-center md:pl-20 border border-black/60 bg-black/70"
+        "absolute left-0 right-0 bottom-0 w-full z-20 pl-12 justify-center md:pl-20 border border-black/60 bg-black/70"
       }
+      style={{ top: STATUS_STRIP_HEIGHT_PX }}
     >
       <div className={"flex md:pr-20 pt-5 align-center justify-center"}>
         <div

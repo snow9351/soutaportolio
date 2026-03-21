@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+import { STATUS_STRIP_HEIGHT_PX } from "@/config/layout"
 import { useEffect, useState } from "react"
 import nanzan from "@/config/location"
 import { certificates } from "@/config/certificates"
@@ -83,7 +84,8 @@ const Education = () => {
             role="dialog"
             aria-modal="true"
             aria-label="Nanzan University map"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+            className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-center bg-black/80 px-2"
+            style={{ top: STATUS_STRIP_HEIGHT_PX }}
             onClick={() => setIsMapOpen(false)}
           >
             <div

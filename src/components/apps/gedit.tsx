@@ -1,168 +1,354 @@
-/* eslint-disable @next/next/no-img-element */
-import React, { useState, useEffect, useCallback } from 'react';
-import emailjs from '@emailjs/browser';
+import React, { useState, useEffect, useCallback } from "react";
+import emailjs from "@emailjs/browser";
+import { Mail, Loader2, CheckCircle2, AlertCircle, Send } from "lucide-react";
+
+const MESSAGE_MIN_LENGTH = 5;
+const MESSAGE_MAX_LENGTH = 5000;
+
+function formatEmailJsError(err: unknown): string {
+  // EmailJS rejects with EmailJSResponseStatus { status, text } (often logs as {} in DevTools)
+  if (
+    err &&
+    typeof err === "object" &&
+    "status" in err &&
+    typeof (err as { text?: unknown }).text === "string"
+  ) {
+    const { status, text } = err as { status: number; text: string };
+    const raw = text.trim();
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as { message?: string; text?: string };
+        return parsed.message || parsed.text || raw;
+      } catch {
+        return raw.length > 200 ? `${raw.slice(0, 200)}…` : raw;
+      }
+    }
+    return `Request failed (${status}). Check EmailJS dashboard (template variables, service, limits).`;
+  }
+  if (err instanceof Error && err.message) return err.message;
+  return "Unknown error";
+}
 
 export default function Gedit() {
-    const [loading, setLoading] = useState(false);
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [subject, setSubject] = useState('');
-    const [message, setMessage] = useState('');
-    const [error, setError] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<"idle" | "error" | "success">("idle");
+  const [statusMessage, setStatusMessage] = useState("");
 
-    useEffect(() => {
-        const userId = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
-        if (userId) {
-            emailjs.init(userId);
-        }
-    }, []);
+  useEffect(() => {
+    const userId = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+    if (userId) {
+      emailjs.init(userId);
+    }
+  }, []);
 
-    const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  const isValidEmail = (value: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
-    const sendMessage = useCallback(async () => {
-        try {
-            setLoading(true);
-            setError(false);
-            setErrorMessage('');
-            const trimmedName = name.trim();
-            const trimmedEmail = email.trim();
-            const trimmedSubject = subject.trim();
-            const trimmedMessage = message.trim();
-            let hasError = false;
-            if (trimmedName.length === 0) {
-                setName('');
-                setError(true);
-                setErrorMessage('Name is required');
-                hasError = true;
-            }
-            if (!isValidEmail(trimmedEmail)) {
-                setEmail('');
-                setError(true);
-                setErrorMessage('Valid email is required');
-                hasError = true;
-            }
-            if (trimmedMessage.length === 0) {
-                setMessage('');
-                setError(true);
-                setErrorMessage('Message is required');
-                hasError = true;
-            }
-            if (hasError) {
-                setLoading(false);
-                return;
-            }
+  const nameOk = name.trim().length >= 1;
+  const emailOk = isValidEmail(email.trim());
+  const messageOk =
+    message.trim().length >= MESSAGE_MIN_LENGTH &&
+    message.trim().length <= MESSAGE_MAX_LENGTH;
+  const canSend = nameOk && emailOk && messageOk && !loading;
 
-            const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-            const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
-            if (!serviceId || !templateId) {
-                setError(true);
-                setErrorMessage('Service ID or template ID is not set');
-                return;
-            }
-            await emailjs.send(serviceId, templateId, {
-                from_name: trimmedName,
-                reply_to: trimmedEmail,
-                from_subject: trimmedSubject,
-                from_message: trimmedMessage,
-            });
-            setError(false);
-            setErrorMessage('Message sent successfully');
-        } catch (error) {
-            console.error(error);
-            setError(true);
-            setErrorMessage('Failed to send message');
-        } finally {
-            setLoading(false);
-        }
-    }, [name, email, subject, message]);
+  const sendMessage = useCallback(async () => {
+    setStatus("idle");
+    setStatusMessage("");
 
-    return (
-        <div className="w-full flex-1 relative flex flex-col bg-ub-cool-grey text-white select-none">
-            <div className="flex items-center justify-between w-full bg-ub-gedit-light/60 border-b border-t border-blue-400 text-sm">
-                <span className="font-bold ml-2">Send a Message to Souta Hoshino</span>
-                <div className="flex">
-                    <button
-                        onClick={sendMessage}
-                        disabled={loading || !name.trim() || !isValidEmail(email.trim()) || !message.trim()}
-                        className={
-                            (loading || !name.trim() || !isValidEmail(email.trim()) || !message.trim()
-                                ? " opacity-50 cursor-not-allowed "
-                                : " cursor-pointer hover:bg-black/80 ") +
-                            " border border-black bg-black/50 px-3 py-1.5 mx-1 rounded transition-all duration-150 ease-in-out"
-                        }
-                    >
-                        Send
-                    </button>
-                </div>
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const trimmedSubject = subject.trim();
+    const trimmedMessage = message.trim();
+
+    if (trimmedName.length === 0) {
+      setStatus("error");
+      setStatusMessage("Please enter your name so I know who to reply to.");
+      return;
+    }
+    if (!isValidEmail(trimmedEmail)) {
+      setStatus("error");
+      setStatusMessage(
+        "Please enter a valid email address (e.g. you@example.com)."
+      );
+      return;
+    }
+    if (trimmedMessage.length < MESSAGE_MIN_LENGTH) {
+      setStatus("error");
+      setStatusMessage(
+        `Your message should be at least ${MESSAGE_MIN_LENGTH} characters.`
+      );
+      return;
+    }
+    if (trimmedMessage.length > MESSAGE_MAX_LENGTH) {
+      setStatus("error");
+      setStatusMessage(`Message is too long (max ${MESSAGE_MAX_LENGTH} characters).`);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY?.trim();
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID?.trim();
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID?.trim();
+
+      if (!publicKey || !serviceId || !templateId) {
+        setStatus("error");
+        setStatusMessage(
+          process.env.NODE_ENV === "development"
+            ? "EmailJS isn’t set up: add NEXT_PUBLIC_EMAILJS_PUBLIC_KEY, NEXT_PUBLIC_EMAILJS_SERVICE_ID, and NEXT_PUBLIC_EMAILJS_TEMPLATE_ID to .env.local (see README), then restart the dev server."
+            : "Contact form isn’t configured yet. Please use LinkedIn or email from the About page."
+        );
+        return;
+      }
+
+      // Every key here becomes {{key}} in your EmailJS template — names must match exactly.
+      const templateParams = {
+        // Sender name (use any of these in the template)
+        title: trimmedName,
+        name: trimmedName,
+        sender_name: trimmedName,
+        from_name: trimmedName,
+        full_name: trimmedName,
+        // Contact & message
+        email: trimmedEmail,
+        reply_to: trimmedEmail,
+        user_email: trimmedEmail,
+        message: trimmedMessage,
+        body: trimmedMessage,
+        content: trimmedMessage,
+        from_message: trimmedMessage,
+        subject: trimmedSubject || "Portfolio contact form",
+        from_subject: trimmedSubject || "Portfolio contact form",
+      };
+      await emailjs.send(serviceId, templateId, templateParams, { publicKey });
+      setStatus("success");
+      setStatusMessage(
+        "Thanks! Your message was sent. I’ll get back to you as soon as I can."
+      );
+      setName("");
+      setEmail("");
+      setSubject("");
+      setMessage("");
+    } catch (err) {
+      const detail = formatEmailJsError(err);
+      console.error("[EmailJS]", detail, err);
+      setStatus("error");
+      setStatusMessage(
+        process.env.NODE_ENV === "development"
+          ? `Could not send: ${detail}`
+          : "Something went wrong sending your message. Please try again in a moment."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [name, email, subject, message]);
+
+  const remaining = MESSAGE_MAX_LENGTH - message.length;
+
+  return (
+    <div className="w-full flex-1 relative flex flex-col bg-gradient-to-b from-[#2d333b] to-[#1e2329] text-gray-100 select-none overflow-hidden">
+      {/* Header */}
+      <header className="shrink-0 border-b border-white/10 bg-black/25">
+        <div className="px-4 py-2 md:px-6 md:py-2.5">
+          <div className="mx-auto flex w-full max-w-lg justify-start">
+            <div className="flex min-w-0 w-full items-start gap-3 sm:gap-4">
+              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-500/20 text-orange-300 md:h-11 md:w-11">
+                <Mail className="h-5 w-5" aria-hidden />
+              </div>
+              <div className="min-w-0 flex-1 text-left">
+                <h1 className="text-lg font-bold text-white tracking-tight sm:text-xl">
+                  Contact me
+                </h1>
+                <p className="mt-1 max-w-xl text-sm leading-snug text-gray-400 md:text-base">
+                  Send a quick note—I usually respond within a couple of days. All
+                  fields marked below are required except subject.
+                </p>
+              </div>
             </div>
-            {errorMessage && (
-                <div
-                    className={`${error ? 'bg-red-900/40 border-red-400' : 'bg-green-900/60 border-green-400'} text-sm mt-0.5 pl-2 py-1.5 border-y`}
-                >
-                    <span className="font-bold mr-3">{error ? 'Warning' : 'Success'}!</span>
-                    {errorMessage}
-                </div>
-            )}
-            <div className="relative flex-1 flex flex-col bg-ub-gedit-dark font-normal windowMainScreen">
-                <div className="absolute left-0 top-0 h-full px-2 bg-ub-gedit-darker"></div>
-                <div className="relative">
-                    <input
-                        id="sender-name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className=" w-full text-ubt-gedit-orange focus:bg-ub-gedit-light outline-none font-medium text-sm pl-6 py-0.5 bg-transparent"
-                        placeholder="Your Name :"
-                        spellCheck="false"
-                        autoComplete="off"
-                        type="text"
-                    />
-                    <span className="absolute left-1 top-1/2 transform -translate-y-1/2 font-bold light text-sm text-ubt-gedit-blue">1</span>
-                </div>
-                <div className="relative">
-                    <input
-                        id="sender-email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className=" w-full my-1 text-ubt-gedit-blue focus:bg-ub-gedit-light outline-none text-sm font-normal pl-6 py-0.5 bg-transparent"
-                        placeholder="your@email.com"
-                        spellCheck="false"
-                        autoComplete="email"
-                        type="email"
-                    />
-                    <span className="absolute left-1 top-1/2 transform -translate-y-1/2 font-bold  text-sm text-ubt-gedit-blue">2</span>
-                </div>
-                <div className="relative">
-                    <input
-                        id="sender-subject"
-                        value={subject}
-                        onChange={(e) => setSubject(e.target.value)}
-                        className=" w-full my-1 text-ubt-gedit-blue focus:bg-ub-gedit-light gedit-subject outline-none text-sm font-normal pl-6 py-0.5 bg-transparent"
-                        placeholder="subject (may be a feedback for this website!)"
-                        spellCheck="false"
-                        autoComplete="off"
-                        type="text"
-                    />
-                    <span className="absolute left-1 top-1/2 transform -translate-y-1/2 font-bold  text-sm text-ubt-gedit-blue">3</span>
-                </div>
-                <div className="relative flex-1">
-                    <textarea
-                        id="sender-message"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        className="w-full gedit-message font-light text-sm resize-none h-full windowMainScreen outline-none tracking-wider pl-6 py-1 bg-transparent"
-                        placeholder="Message"
-                        spellCheck="false"
-                        autoComplete="none"
-                    />
-                    <span className="absolute left-1 top-1 font-bold  text-sm text-ubt-gedit-blue">4</span>
-                </div>
-            </div>
-            {loading && (
-                <div className="flex justify-center items-center animate-pulse h-full w-full bg-gray-400/30 absolute top-0 left-0">
-                    <img className=" w-8 absolute animate-spin" src="/images/icons/process-working-symbolic.svg" alt="Ubuntu Process Symbol" />
-                </div>
-            )}
+          </div>
         </div>
-    );
+      </header>
+
+      {/* Status banner */}
+      {status !== "idle" && statusMessage ? (
+        <div
+          role="alert"
+          aria-live="polite"
+          className={`shrink-0 border-b py-2.5 text-sm ${
+            status === "error"
+              ? "bg-red-950/50 text-red-100 border-red-500/30"
+              : "bg-emerald-950/45 text-emerald-100 border-emerald-500/30"
+          }`}
+        >
+          <div className="px-4 md:px-6">
+            <div className="mx-auto flex w-full max-w-lg items-start gap-2">
+              {status === "error" ? (
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-300" />
+              ) : (
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
+              )}
+              <span>{statusMessage}</span>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Form */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar windowMainScreen px-4 py-3 md:px-6 md:py-4">
+        <form
+          className="mx-auto flex max-w-lg w-full flex-col gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void sendMessage();
+          }}
+        >
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-x-4">
+            <div className="space-y-1.5 min-w-0">
+              <label
+                htmlFor="sender-name"
+                className="block text-xs font-medium uppercase tracking-wide text-gray-400"
+              >
+                Your name <span className="text-orange-400">*</span>
+              </label>
+              <input
+                id="sender-name"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (status !== "idle") {
+                    setStatus("idle");
+                    setStatusMessage("");
+                  }
+                }}
+                className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-gray-500 outline-none transition focus:border-orange-400/50 focus:ring-2 focus:ring-orange-400/25"
+                placeholder="Jane Doe"
+                spellCheck={false}
+                autoComplete="name"
+                type="text"
+                disabled={loading}
+              />
+            </div>
+
+            <div className="space-y-1.5 min-w-0">
+              <label
+                htmlFor="sender-email"
+                className="block text-xs font-medium uppercase tracking-wide text-gray-400"
+              >
+                Email <span className="text-orange-400">*</span>
+              </label>
+              <input
+                id="sender-email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (status !== "idle") {
+                    setStatus("idle");
+                    setStatusMessage("");
+                  }
+                }}
+                className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-gray-500 outline-none transition focus:border-orange-400/50 focus:ring-2 focus:ring-orange-400/25"
+                placeholder="you@example.com"
+                spellCheck={false}
+                autoComplete="email"
+                type="email"
+                disabled={loading}
+              />
+              {email.length > 0 && !emailOk ? (
+                <p className="text-xs text-amber-400/90">
+                  That doesn’t look like a valid email yet.
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label
+              htmlFor="sender-subject"
+              className="block text-xs font-medium uppercase tracking-wide text-gray-400"
+            >
+              Subject <span className="text-gray-500 normal-case">(optional)</span>
+            </label>
+            <input
+              id="sender-subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-gray-500 outline-none transition focus:border-orange-400/50 focus:ring-2 focus:ring-orange-400/25"
+              placeholder="e.g. Collaboration, question about your work…"
+              spellCheck={true}
+              autoComplete="off"
+              type="text"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label
+              htmlFor="sender-message"
+              className="block text-xs font-medium uppercase tracking-wide text-gray-400"
+            >
+              Message <span className="text-orange-400">*</span>
+            </label>
+            <textarea
+              id="sender-message"
+              value={message}
+              onChange={(e) => {
+                setMessage(e.target.value);
+                if (status !== "idle") setStatus("idle");
+              }}
+              rows={5}
+              className="w-full min-h-[120px] resize-y rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-gray-500 outline-none transition focus:border-orange-400/50 focus:ring-2 focus:ring-orange-400/25"
+              placeholder={`What would you like to say? (at least ${MESSAGE_MIN_LENGTH} characters)`}
+              spellCheck={true}
+              autoComplete="off"
+              disabled={loading}
+            />
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+              <span>
+                {message.trim().length < MESSAGE_MIN_LENGTH
+                  ? `${MESSAGE_MIN_LENGTH - message.trim().length} more characters needed`
+                  : "Looks good to send"}
+              </span>
+              <span className={remaining < 200 ? "text-amber-400" : ""}>
+                {message.length} / {MESSAGE_MAX_LENGTH}
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-1 flex flex-col gap-4 border-t border-white/5 pt-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+            <p className="order-2 text-xs leading-relaxed text-gray-500 sm:order-1 sm:max-w-[55%]">
+              Tip: include how I can best reach you and what timezone you’re in.
+            </p>
+            <button
+              type="submit"
+              disabled={!canSend}
+              className="order-1 sm:order-2 inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-900/30 transition hover:bg-orange-500 disabled:pointer-events-none disabled:opacity-40 disabled:shadow-none sm:ml-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                  Sending…
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" aria-hidden />
+                  Send message
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {loading ? (
+        <div
+          className="pointer-events-none absolute inset-0 z-10 bg-black/20"
+          aria-hidden
+        />
+      ) : null}
+    </div>
+  );
 }
