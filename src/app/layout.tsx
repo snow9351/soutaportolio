@@ -1,6 +1,15 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+
+/** Canonical site URL for Open Graph / Twitter absolute URLs. Set NEXT_PUBLIC_SITE_URL on Vercel (e.g. https://your-app.vercel.app). */
+function resolveMetadataBase(): URL {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit) return new URL(explicit);
+  if (process.env.VERCEL_URL) return new URL(`https://${process.env.VERCEL_URL}`);
+  return new URL("http://localhost:3000");
+}
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,7 +22,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  // metadataBase: new URL('https://snow9351.github.io'),
+  metadataBase: resolveMetadataBase(),
   title: "souta Portfolio - Mobile AI Full-Stack Developer",
   description: "Souta Hoshino's Personal Portfolio Website. Made with Next.js and Tailwind CSS.",
   keywords: "snow9351, snow9351's portfolio, mobile, full stack, engineer, financial, engineer, souta, Souta Hoshino",
@@ -65,6 +74,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );

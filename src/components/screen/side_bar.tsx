@@ -111,7 +111,7 @@ export function AllApps(props: AllAppsProps) {
 
   return (
     <div
-      className={`w-14 h-14 rounded m-2 hover:bg-white/10 hover:scale-110 hover:translate-y-1 flex items-center justify-center transition-all duration-150 ease-in-out`}
+      className={`w-11 h-11 rounded m-1.5 hover:bg-white/10 hover:scale-110 hover:translate-y-1 flex items-center justify-center transition-all duration-150 ease-in-out`}
       style={{ marginTop: "auto" }}
       onMouseEnter={() => {
         setTitle(true);
@@ -123,9 +123,9 @@ export function AllApps(props: AllAppsProps) {
     >
       <div className="relative">
         <Image
-          width={44}
-          height={44}
-          className={`w-11 h-11 transition-transform duration-150 ease-in-out ${title ? "scale-125 translate-y-1" : "scale-100 translate-y-0"}`}
+          width={32}
+          height={32}
+          className={`w-8 h-8 transition-transform duration-150 ease-in-out ${title ? "scale-125 translate-y-1" : "scale-100 translate-y-0"}`}
           src="/images/system/view-app-grid-symbolic.svg"
           alt="Ubuntu view app"
         />

@@ -52,26 +52,26 @@ export default function SideBarApp({
         (isClose[id] === false && isFocus[id]
           ? "bg-white/10"
           : "") +
-        " w-auto p-3 outline-none relative transition hover:bg-white/10 hover:scale-110 hover:translate-y-1 rounded m-2 transition-all duration-150 ease-in-out"
+        " w-auto p-2 outline-none relative transition hover:bg-white/10 hover:scale-110 hover:translate-y-1 rounded m-1.5 transition-all duration-150 ease-in-out"
       }
       id={"sidebar-" + id}
     >
       <Image
-        width={72}
-        height={72}
+        width={48}
+        height={48}
         className={
-          "w-12 h-12 object-contain transition-transform duration-150 ease-in-out " +
+          "w-9 h-9 object-contain transition-transform duration-150 ease-in-out " +
           (showTitle ? "scale-125 translate-y-1" : "scale-100 translate-y-0")
         }
         src={icon}
         alt="Ubuntu App Icon"
       />
       <Image
-        width={72}
-        height={72}
+        width={48}
+        height={48}
         className={
           (scaleImage ? " scale " : "") +
-          " scalable-app-icon w-12 h-12 object-contain absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+          " scalable-app-icon w-9 h-9 object-contain absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
         }
         src={icon}
         alt=""
