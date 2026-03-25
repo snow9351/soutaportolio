@@ -21,7 +21,7 @@ const History = () => {
       summary:
         "Leading small development team building advanced trading infrastructure including TradingVPS hosting, copytrading platform, and intelligent AI trading agents.",
       teamStructure:
-        "4-person agile team: 2 full stack developers, 1 DevOps engineer, 1 AI/ML specialist.",
+        "4-person agile team: full stack developers, DevOps engineer, AI/ML specialist.",
       responsibilities: [
         "Lead architecture design for TradingVPS high-performance hosting platform.",
         "Oversee copytrading platform development with real-time trade synchronization.",

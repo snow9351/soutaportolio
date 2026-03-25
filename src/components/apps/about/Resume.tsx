@@ -5,7 +5,7 @@ const Resume = () => {
         <iframe
             className="w-full"
             style={{ height: `calc(100% - ${STATUS_STRIP_HEIGHT_PX}px)` }}
-            src="./files/soutahoshino.pdf"
+            src="./files/SoutaCV.pdf"
             title="Souta Hoshino Resume"
             frameBorder="0"
         ></iframe>
