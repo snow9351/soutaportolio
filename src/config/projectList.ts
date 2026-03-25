@@ -275,7 +275,7 @@ export const projectList: Project[] = [
     source: "https://github.com/snow9351/NexusFlow",
     link: "https://proxima-project.netlify.app/",
     images: [
-      "/images/projects/NexusFlow/NexusFlow.png"
+      "/images/projects/NexusFlow/NexusFlow.PNG"
     ],
     tech: [
       "Node.js",
@@ -292,7 +292,7 @@ export const projectList: Project[] = [
     source: "https://github.com/snow9351/Pamy-s-Sushi",
     link: "https://pamys-sushi.vercel.app/#",
     images: [
-      "/images/projects/Shushi/1.png" 
+      "/images/projects/Shushi/1.PNG"
     ],
     tech: [
       "HTML",
@@ -334,9 +334,9 @@ export const projectList: Project[] = [
     status: "completed",
     link: "https://beta.traderscasa.com/",
     images: [
-      "/images/projects/traderscasa/home.png",
-      "/images/projects/traderscasa/experience.png",
-      "/images/projects/traderscasa/main.png",
+      "/images/projects/traderscasa/home.PNG",
+      "/images/projects/traderscasa/exprience.PNG",
+      "/images/projects/traderscasa/main.PNG",
     ],
     tech: [
       "Next.js",

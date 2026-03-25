@@ -106,8 +106,12 @@ const Projects = () => {
   };
 
   const getProjectImages = (project: ProjectType): string[] => {
-    if (project?.images && Array.isArray(project.images) && project.images.length > 0) return project.images;
-    if (project?.image) return [project.image];
+    if (project?.images && Array.isArray(project.images) && project.images.length > 0) {
+      // Some entries in `projectList` contain accidental trailing spaces; trim so
+      // image URLs don't become invalid (404) for Next/Image.
+      return project.images.map((p) => (typeof p === "string" ? p.trim() : p)).filter(Boolean) as string[];
+    }
+    if (project?.image) return [typeof project.image === "string" ? project.image.trim() : project.image];
     return [];
   };
 
