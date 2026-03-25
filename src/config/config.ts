@@ -2,6 +2,8 @@ import { displayTerminalCalc } from "@/components/apps/calc";
 import Chrome from "@/components/apps/chrome";
 import Gedit from "@/components/apps/gedit";
 import AboutMe from "@/components/apps/me";
+import AboutTeam from "@/components/apps/team";
+import VisitorHub from "@/components/apps/visitor-hub";
 import { displaySettings } from "@/components/apps/settings";
 import { displayTerminal } from "@/components/apps/terminal";
 import { displayTrash } from "@/components/apps/trash";
@@ -16,6 +18,28 @@ const apps = [
     favourite: true,
     desktop_shortcut: true,
     screen: AboutMe,
+  },
+  {
+    id: "about-team",
+    title: "About my team",
+    icon: "/images/icons/experience.svg",
+    disabled: false,
+    favourite: false,
+    desktop_shortcut: true,
+    windowWidthPct: 52,
+    windowHeightPct: 72,
+    screen: AboutTeam,
+  },
+  {
+    id: "visitor-hub",
+    title: "Community",
+    icon: "/images/icons/contact.svg",
+    disabled: false,
+    favourite: false,
+    desktop_shortcut: true,
+    windowWidthPct: 52,
+    windowHeightPct: 80,
+    screen: VisitorHub,
   },
   {
     id: "gedit",

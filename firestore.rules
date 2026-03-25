@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// Deploy: firebase deploy --only firestore:rules
+// Console: Firebase → Firestore → Rules → paste and Publish
+//
+// Public read so every visitor sees the same thumbs and messages.
+// Create-only (no edits/deletes) to reduce abuse; tighten further if needed.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /visitorCommunityPosts/{docId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['type', 'displayName', 'message', 'createdAt'])
+        && request.resource.data.type in ['feedback', 'recommendation', 'post']
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 200
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() < 2000;
+      allow update, delete: if false;
+    }
+
+    match /visitorCommunityThumbs/{docId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['displayName', 'createdAt'])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.displayName.size() <= 120;
+      allow update, delete: if false;
+    }
+  }
+}

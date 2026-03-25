@@ -37,6 +37,8 @@ export default function Gedit() {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "error" | "success">("idle");
   const [statusMessage, setStatusMessage] = useState("");
+  /** When checked, success banner stays visible while editing fields (errors still clear on edit). */
+  const [keepSuccessFeedback, setKeepSuccessFeedback] = useState(false);
 
   useEffect(() => {
     const userId = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
@@ -149,6 +151,13 @@ export default function Gedit() {
 
   const remaining = MESSAGE_MAX_LENGTH - message.length;
 
+  const clearFeedbackOnEdit = () => {
+    if (status === "idle") return;
+    if (status === "success" && keepSuccessFeedback) return;
+    setStatus("idle");
+    setStatusMessage("");
+  };
+
   return (
     <div className="w-full flex-1 relative flex flex-col bg-gradient-to-b from-[#2d333b] to-[#1e2329] text-gray-100 select-none overflow-hidden">
       {/* Header */}
@@ -245,10 +254,7 @@ export default function Gedit() {
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
-                  if (status !== "idle") {
-                    setStatus("idle");
-                    setStatusMessage("");
-                  }
+                  clearFeedbackOnEdit();
                 }}
                 className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-gray-500 outline-none transition focus:border-orange-400/50 focus:ring-2 focus:ring-orange-400/25"
                 placeholder="you@example.com"
@@ -297,7 +303,7 @@ export default function Gedit() {
               value={message}
               onChange={(e) => {
                 setMessage(e.target.value);
-                if (status !== "idle") setStatus("idle");
+                clearFeedbackOnEdit();
               }}
               rows={5}
               className="w-full min-h-[120px] resize-y rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-gray-500 outline-none transition focus:border-orange-400/50 focus:ring-2 focus:ring-orange-400/25"
@@ -319,9 +325,22 @@ export default function Gedit() {
           </div>
 
           <div className="mt-1 flex flex-col gap-4 border-t border-white/5 pt-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-            <p className="order-2 text-xs leading-relaxed text-gray-500 sm:order-1 sm:max-w-[55%]">
-              Tip: include how I can best reach you and what timezone you’re in.
-            </p>
+            <div className="order-2 space-y-3 sm:order-1 sm:max-w-[55%]">
+              <p className="text-xs leading-relaxed text-gray-500">
+                Tip: include how I can best reach you and what timezone you’re in.
+              </p>
+              <label className="flex cursor-pointer items-start gap-2 text-xs text-gray-400">
+                <input
+                  type="checkbox"
+                  checked={keepSuccessFeedback}
+                  onChange={(e) => setKeepSuccessFeedback(e.target.checked)}
+                  className="mt-0.5 size-3.5 shrink-0 rounded border-white/30 bg-black/40 text-orange-600 focus:ring-orange-500/50"
+                />
+                <span>
+                  Keep the “sent successfully” message visible while I edit the form
+                </span>
+              </label>
+            </div>
             <button
               type="submit"
               disabled={!canSend}
