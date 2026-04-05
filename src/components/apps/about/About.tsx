@@ -98,8 +98,8 @@ const About = () => {
     {
       icon: "/images/contact/linkedin.svg",
       alt: "LinkedIn",
-      url: "https://www.linkedin.com/in/souta-hoshino-51144a3b8/",
-      onClick: () => window.open("https://www.linkedin.com/in/souta-hoshino-51144a3b8/", "_blank")
+      url: "https://www.linkedin.com/in/souta-hoshino-8105693b9",
+      onClick: () => window.open("https://www.linkedin.com/in/souta-hoshino-8105693b9", "_blank")
     },
     {
       icon: "/images/contact/github.svg",
@@ -133,7 +133,7 @@ const About = () => {
     {
       label: "LinkedIn",
       value: "souta-hoshino-51144a3b8",
-      href: "https://www.linkedin.com/in/souta-hoshino-51144a3b8"
+      href: "https://www.linkedin.com/in/souta-hoshino-8105693b9"
     },
     {
       label: "Telegram",

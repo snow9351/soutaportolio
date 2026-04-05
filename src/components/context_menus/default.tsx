@@ -34,7 +34,7 @@ function DefaultMenu(props: DefaultMenuProps) {
       <Devider />
       <a
         rel="noreferrer noopener"
-        href="https://www.linkedin.com/in/souta-mizuno-6310a6365/"
+        href="https://www.linkedin.com/in/souta-hoshino-8105693b9"
         target="_blank"
         className="w-full block cursor-default py-0.5 hover:bg-ub-warm-grey/20 mb-1.5 transition-all duration-150 ease-in-out"
       >
